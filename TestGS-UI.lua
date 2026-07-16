@@ -1,5 +1,5 @@
 --[[
-    GamesenseUI - 1:1 gamesense style UI library for Roblox
+    GamesenseUI - Authentic 1:1 Gamesense Style UI Library for Roblox
 --]]
 
 local TweenService = game:GetService("TweenService")
@@ -10,34 +10,35 @@ local LocalPlayer = Players.LocalPlayer
 local IsMobile = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
 
 --=============================
--- THEME
+-- THEME & PALETTE (1:1 Gamesense)
 --=============================
 local Theme = {
-    Background      = Color3.fromRGB(18, 18, 20),
-    Panel           = Color3.fromRGB(24, 24, 27),
-    PanelAlt        = Color3.fromRGB(29, 29, 33),
-    Border          = Color3.fromRGB(45, 45, 50),
-    Accent          = Color3.fromRGB(0, 170, 255),
+    Background      = Color3.fromRGB(12, 12, 12),      -- Глубокий темный
+    Panel           = Color3.fromRGB(17, 17, 17),      -- Фон секций
+    PanelAlt        = Color3.fromRGB(22, 22, 22),      -- Кнопки, инпуты
+    BorderOuter     = Color3.fromRGB(40, 40, 40),      -- Внешняя рамка
+    BorderInner     = Color3.fromRGB(25, 25, 25),      -- Внутренняя рамка секций
+    Accent          = Color3.fromRGB(150, 200, 60),    -- Тот самый фирменный зеленый/лаймовый
     
     TopBarGradient  = {
-        Color3.fromRGB(255, 0, 150),
-        Color3.fromRGB(0, 255, 255),
-        Color3.fromRGB(255, 220, 0),
+        Color3.fromRGB(55, 175, 225),  -- Сине-голубой
+        Color3.fromRGB(200, 80, 185),  -- Розовый
+        Color3.fromRGB(200, 200, 80),  -- Желто-зеленый
     },
     
-    TextPrimary     = Color3.fromRGB(235, 235, 240),
-    TextSecondary   = Color3.fromRGB(155, 155, 165),
-    TabActive       = Color3.fromRGB(35, 35, 42),
-    TabInactive     = Color3.fromRGB(24, 24, 27),
-    ToggleOn        = Color3.fromRGB(0, 170, 255),
-    ToggleOff       = Color3.fromRGB(55, 55, 62),
-    SliderFill      = Color3.fromRGB(0, 170, 255),
-    Font            = Enum.Font.Gotham,
-    FontBold        = Enum.Font.GothamBold,
+    TextPrimary     = Color3.fromRGB(240, 240, 240),
+    TextSecondary   = Color3.fromRGB(130, 130, 130),
+    TextDark        = Color3.fromRGB(80, 80, 80),
+    
+    ToggleOn        = Color3.fromRGB(153, 204, 0),     -- Чистый Gamesense Зеленый
+    ToggleOff       = Color3.fromRGB(35, 35, 35),
+    
+    Font            = Enum.Font.SourceSans,
+    FontBold        = Enum.Font.SourceSansBold,
 }
 
 --=============================
--- UTIL
+-- UTILITY FUNCTIONS
 --=============================
 local function create(class, props, children)
     local inst = Instance.new(class)
@@ -56,33 +57,8 @@ local function tween(obj, info, props)
     return t
 end
 
-local function corner(radius)
-    return create("UICorner", {CornerRadius = UDim.new(0, radius or 5)})
-end
-
-local function stroke(color, thickness)
-    return create("UIStroke", {
-        Color = color or Theme.Border,
-        Thickness = thickness or 1,
-        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
-    })
-end
-
-local function gradientBar(parent, colors)
-    local sequence = {}
-    local step = 1 / (#colors - 1)
-    for i, c in ipairs(colors) do
-        table.insert(sequence, ColorSequenceKeypoint.new(step * (i - 1), c))
-    end
-    return create("UIGradient", {
-        Color = ColorSequence.new(sequence),
-        Rotation = 0,
-        Parent = parent,
-    })
-end
-
 --=============================
--- LIBRARY
+-- MAIN LIBRARY CLASS
 --=============================
 local Library = {}
 Library.__index = Library
@@ -94,10 +70,10 @@ function Library.new(title)
     self.Tabs = {}
     self.ActiveTab = nil
     self.Open = true
-    self.Orientation = "Horizontal"
+    self.Orientation = "Vertical" -- По умолчанию 1:1 оригинальный вертикальный вид
 
     self.ScreenGui = create("ScreenGui", {
-        Name = "GamesenseUI",
+        Name = "GamesenseUI_Actual",
         ResetOnSpawn = false,
         ZIndexBehavior = Enum.ZIndexBehavior.Sibling,
         DisplayOrder = 999,
@@ -108,22 +84,30 @@ function Library.new(title)
         self.ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
     end
 
-    local winW, winH = 680, 430
-    if IsMobile then winW, winH = 380, 300 end
+    local winW, winH = 640, 480
+    if IsMobile then winW, winH = 450, 320 end
 
+    -- Main Container (Тонкая двойная обводка как в CS)
     self.Main = create("Frame", {
         Name = "Main",
         Size = UDim2.fromOffset(winW, winH),
         Position = UDim2.new(0.5, -winW / 2, 0.5, -winH / 2),
         BackgroundColor3 = Theme.Background,
-        BorderSizePixel = 0,
-        ClipsDescendants = true,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
+        ClipsDescendants = false,
         Parent = self.ScreenGui,
     })
-    corner(6).Parent = self.Main
-    stroke(Theme.Border, 1).Parent = self.Main
 
-    -- Top rainbow strip
+    -- Внутренний темный контур для имитации 1:1 рамки
+    create("UIStroke", {
+        Color = Color3.fromRGB(0, 0, 0),
+        Thickness = 1,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Parent = self.Main
+    })
+
+    -- Градиентная полоса сверху
     self.TopStrip = create("Frame", {
         Name = "TopStrip",
         Size = UDim2.new(1, 0, 0, 3),
@@ -131,70 +115,98 @@ function Library.new(title)
         BorderSizePixel = 0,
         Parent = self.Main,
     })
-    gradientBar(self.TopStrip, Theme.TopBarGradient)
+    
+    local sequence = {}
+    local step = 1 / (#Theme.TopBarGradient - 1)
+    for i, c in ipairs(Theme.TopBarGradient) do
+        table.insert(sequence, ColorSequenceKeypoint.new(step * (i - 1), c))
+    end
+    create("UIGradient", {
+        Color = ColorSequence.new(sequence),
+        Rotation = 0,
+        Parent = self.TopStrip,
+    })
 
-    -- Accent side lines
-    create("Frame", {Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(0, 0, 0, 0), BackgroundColor3 = Theme.Accent, BorderSizePixel = 0, Parent = self.Main})
-    create("Frame", {Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, -1, 0, 0), BackgroundColor3 = Theme.Accent, BorderSizePixel = 0, Parent = self.Main})
-
-    -- Title bar
+    -- Заголовок меню
     self.TitleBar = create("Frame", {
         Name = "TitleBar",
-        Size = UDim2.new(1, 0, 0, 32),
+        Size = UDim2.new(1, 0, 0, 24),
         Position = UDim2.new(0, 0, 0, 3),
-        BackgroundColor3 = Theme.Panel,
+        BackgroundColor3 = Theme.Background,
         BorderSizePixel = 0,
         Parent = self.Main,
     })
 
     self.TitleLabel = create("TextLabel", {
         Name = "TitleLabel",
-        Size = UDim2.new(1, -90, 1, 0),
-        Position = UDim2.new(0, 14, 0, 0),
+        Size = UDim2.new(1, -100, 1, 0),
+        Position = UDim2.new(0, 10, 0, 0),
         BackgroundTransparency = 1,
         Text = self.Title,
         Font = Theme.FontBold,
-        TextSize = 14,
+        TextSize = 13,
         TextColor3 = Theme.TextPrimary,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = self.TitleBar,
     })
 
+    -- Кнопка смены ориентации (адаптив)
     self.OrientBtn = create("TextButton", {
-        Size = UDim2.fromOffset(24, 24),
-        Position = UDim2.new(1, -68, 0, 4),
+        Size = UDim2.fromOffset(18, 18),
+        Position = UDim2.new(1, -50, 0, 3),
         BackgroundColor3 = Theme.PanelAlt,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
         Text = "⇄",
         Font = Theme.Font,
+        TextSize = 12,
+        TextColor3 = Theme.TextSecondary,
+        Parent = self.TitleBar,
+    })
+
+    -- Кнопка закрытия
+    self.CloseBtn = create("TextButton", {
+        Size = UDim2.fromOffset(18, 18),
+        Position = UDim2.new(1, -26, 0, 3),
+        BackgroundColor3 = Theme.PanelAlt,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
+        Text = "×",
+        Font = Theme.FontBold,
         TextSize = 14,
         TextColor3 = Theme.TextSecondary,
         Parent = self.TitleBar,
     })
-    corner(4).Parent = self.OrientBtn
-
-    self.CloseBtn = create("TextButton", {
-        Size = UDim2.fromOffset(24, 24),
-        Position = UDim2.new(1, -36, 0, 4),
-        BackgroundColor3 = Theme.PanelAlt,
-        Text = "×",
-        Font = Theme.Font,
-        TextSize = 18,
-        TextColor3 = Theme.TextSecondary,
-        Parent = self.TitleBar,
-    })
-    corner(4).Parent = self.CloseBtn
 
     self.Body = create("Frame", {
-        Size = UDim2.new(1, 0, 1, -35),
-        Position = UDim2.new(0, 0, 0, 35),
-        BackgroundTransparency = 1,
+        Size = UDim2.new(1, -12, 1, -40),
+        Position = UDim2.new(0, 6, 0, 32),
+        BackgroundColor3 = Theme.Background,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderInner,
         Parent = self.Main,
     })
 
-    self.TabBar = create("Frame", {BackgroundColor3 = Theme.Panel, BorderSizePixel = 0, Parent = self.Body})
-    self.TabBarLayout = create("UIListLayout", {FillDirection = Enum.FillDirection.Horizontal, SortOrder = Enum.SortOrder.LayoutOrder, Parent = self.TabBar})
+    -- Панель вкладок (Левый сайдбар / Верхний сайдбар)
+    self.TabBar = create("Frame", {
+        BackgroundColor3 = Color3.fromRGB(14, 14, 14),
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderInner,
+        Parent = self.Body
+    })
+    
+    self.TabBarLayout = create("UIListLayout", {
+        FillDirection = Enum.FillDirection.Vertical,
+        SortOrder = Enum.SortOrder.LayoutOrder,
+        Padding = UDim.new(0, 0),
+        Parent = self.TabBar
+    })
 
-    self.PageContainer = create("Frame", {BackgroundTransparency = 1, Parent = self.Body})
+    -- Контейнер страниц
+    self.PageContainer = create("Frame", {
+        BackgroundTransparency = 1,
+        Parent = self.Body,
+    })
 
     self:SetOrientation(self.Orientation)
     self:_setupDrag(self.TitleBar)
@@ -208,7 +220,7 @@ function Library.new(title)
     if IsMobile then self:_createMobileToggle() end
 
     UserInputService.InputBegan:Connect(function(input, gpe)
-        if gpe or input.KeyCode \~= Enum.KeyCode.Insert then return end
+        if gpe or input.KeyCode ~= Enum.KeyCode.Insert then return end
         self:Toggle()
     end)
 
@@ -219,33 +231,39 @@ function Library:SetOrientation(orientation)
     self.Orientation = orientation
 
     if orientation == "Horizontal" then
-        self.TabBar.Size = UDim2.new(1, 0, 0, 36)
+        self.TabBar.Size = UDim2.new(1, 0, 0, 40)
         self.TabBar.Position = UDim2.new(0, 0, 0, 0)
         self.TabBarLayout.FillDirection = Enum.FillDirection.Horizontal
 
-        self.PageContainer.Size = UDim2.new(1, 0, 1, -36)
-        self.PageContainer.Position = UDim2.new(0, 0, 0, 36)
+        self.PageContainer.Size = UDim2.new(1, 0, 1, -40)
+        self.PageContainer.Position = UDim2.new(0, 0, 0, 40)
     else
-        self.TabBar.Size = UDim2.new(0, 140, 1, 0)
+        -- Оригинальный Gamesense стиль (Узкая вертикальная полоса слева)
+        self.TabBar.Size = UDim2.new(0, 54, 1, 0)
         self.TabBar.Position = UDim2.new(0, 0, 0, 0)
         self.TabBarLayout.FillDirection = Enum.FillDirection.Vertical
 
-        self.PageContainer.Size = UDim2.new(1, -140, 1, 0)
-        self.PageContainer.Position = UDim2.new(0, 140, 0, 0)
+        self.PageContainer.Size = UDim2.new(1, -54, 1, 0)
+        self.PageContainer.Position = UDim2.new(0, 54, 0, 0)
     end
 
     for _, tabData in ipairs(self.Tabs) do
         if orientation == "Horizontal" then
             tabData.Button.Size = UDim2.new(0, 100, 1, 0)
+            tabData.IconLabel.Visible = false
+            tabData.TextLabel.Visible = true
+            tabData.TextLabel.Size = UDim2.new(1, 0, 1, 0)
         else
-            tabData.Button.Size = UDim2.new(1, 0, 0, 36)
+            -- 1:1 Вкладка слева (Только большая иконка по центру, как в оригинале)
+            tabData.Button.Size = UDim2.new(1, 0, 0, 54)
+            tabData.IconLabel.Visible = true
+            tabData.TextLabel.Visible = false
         end
     end
 end
 
 function Library:_setupDrag(handle)
-    local dragging = false
-    local dragInput, dragStart, startPos
+    local dragging, dragInput, dragStart, startPos = false, nil, nil, nil
 
     local function update(input)
         local delta = input.Position - dragStart
@@ -285,68 +303,38 @@ end
 function Library:_createMobileToggle()
     local btn = create("TextButton", {
         Name = "MobileToggle",
-        Size = UDim2.fromOffset(46, 46),
-        Position = UDim2.new(0, 10, 0.5, -23),
-        BackgroundColor3 = Theme.Panel,
-        Text = "☰",
-        TextColor3 = Theme.TextPrimary,
+        Size = UDim2.fromOffset(40, 40),
+        Position = UDim2.new(0, 15, 0.3, 0),
+        BackgroundColor3 = Theme.Background,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
+        Text = "GS",
+        TextColor3 = Theme.Accent,
         Font = Theme.FontBold,
-        TextSize = 20,
+        TextSize = 14,
         Parent = self.ScreenGui,
     })
-    corner(23).Parent = btn
-    stroke(Theme.Border, 1).Parent = btn
-
+    
     self:_setupDrag(btn)
-
-    btn.MouseButton1Click:Connect(function()
-        self:Toggle()
-    end)
-
-    self.MobileToggleBtn = btn
+    btn.MouseButton1Click:Connect(function() self:Toggle() end)
 end
 
 function Library:Toggle()
     self.Open = not self.Open
-
-    if self.Open then
-        self.Main.Visible = true
-        self.Main.Size = UDim2.fromOffset(0, 0)
-        self.Main.Position = UDim2.new(0.5, 0, 0.5, 0)
-        local targetSize = IsMobile and UDim2.fromOffset(380, 300) or UDim2.fromOffset(680, 430)
-        local targetPos = UDim2.new(0.5, -targetSize.X.Offset / 2, 0.5, -targetSize.Y.Offset / 2)
-
-        tween(self.Main, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {
-            Size = targetSize,
-            Position = targetPos,
-        })
-    else
-        local currentSize = self.Main.Size
-        tween(self.Main, TweenInfo.new(0.22, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {
-            Size = UDim2.fromOffset(0, 0),
-            Position = UDim2.new(
-                self.Main.Position.X.Scale, self.Main.Position.X.Offset + currentSize.X.Offset / 2,
-                self.Main.Position.Y.Scale, self.Main.Position.Y.Offset + currentSize.Y.Offset / 2
-            ),
-        })
-        task.delay(0.22, function()
-            if not self.Open then
-                self.Main.Visible = false
-            end
-        end)
-    end
+    self.Main.Visible = self.Open
 end
 
 --=============================
--- TABS
+-- TABS IMPLEMENTATION
 --=============================
 function Library:CreateTab(name, icon)
     local index = #self.Tabs + 1
+    icon = icon or "🎯"
 
     local button = create("TextButton", {
         Name = name .. "Button",
-        Size = self.Orientation == "Horizontal" and UDim2.new(0, 100, 1, 0) or UDim2.new(1, 0, 0, 36),
-        BackgroundColor3 = Theme.TabInactive,
+        Size = UDim2.new(1, 0, 0, 54),
+        BackgroundColor3 = Color3.fromRGB(14, 14, 14),
         BorderSizePixel = 0,
         Text = "",
         AutoButtonColor = false,
@@ -354,13 +342,34 @@ function Library:CreateTab(name, icon)
         Parent = self.TabBar,
     })
 
-    create("TextLabel", {
+    -- Индикатор активной вкладки слева (зеленая вертикальная микро-полоска)
+    local activeIndicator = create("Frame", {
+        Size = UDim2.new(0, 2, 1, 0),
+        Position = UDim2.new(0, 0, 0, 0),
+        BackgroundColor3 = Theme.Accent,
+        BorderSizePixel = 0,
+        Visible = index == 1,
+        Parent = button
+    })
+
+    local iconLabel = create("TextLabel", {
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
-        Text = (icon and (icon .. "  ") or "") .. name,
+        Text = icon,
         Font = Theme.Font,
+        TextSize = 24,
+        TextColor3 = index == 1 and Theme.TextPrimary or Theme.TextSecondary,
+        Parent = button,
+    })
+
+    local textLabel = create("TextLabel", {
+        Size = UDim2.new(1, 0, 1, 0),
+        BackgroundTransparency = 1,
+        Text = name,
+        Font = Theme.FontBold,
         TextSize = 13,
-        TextColor3 = Theme.TextSecondary,
+        TextColor3 = index == 1 and Theme.TextPrimary or Theme.TextSecondary,
+        Visible = false,
         Parent = button,
     })
 
@@ -369,8 +378,8 @@ function Library:CreateTab(name, icon)
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        ScrollBarThickness = 3,
-        ScrollBarImageColor3 = Theme.Accent,
+        ScrollBarThickness = 2,
+        ScrollBarImageColor3 = Theme.BorderOuter,
         CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
         Visible = index == 1,
@@ -378,37 +387,38 @@ function Library:CreateTab(name, icon)
     })
 
     create("UIPadding", {
-        PaddingTop = UDim.new(0, 10),
-        PaddingLeft = UDim.new(0, 10),
-        PaddingRight = UDim.new(0, 10),
-        PaddingBottom = UDim.new(0, 10),
+        PaddingTop = UDim.new(0, 12),
+        PaddingLeft = UDim.new(0, 12),
+        PaddingRight = UDim.new(0, 12),
+        PaddingBottom = UDim.new(0, 12),
         Parent = page,
     })
 
+    -- 1:1 Сетка колонок Gamesense
     local leftCol = create("Frame", {
         Name = "LeftColumn",
-        Size = UDim2.new(0.5, -5, 1, 0),
+        Size = UDim2.new(0.5, -7, 1, 0),
         BackgroundTransparency = 1,
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = page,
     })
     create("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 8),
+        Padding = UDim.new(0, 14),
         Parent = leftCol,
     })
 
     local rightCol = create("Frame", {
         Name = "RightColumn",
-        Size = UDim2.new(0.5, -5, 1, 0),
-        Position = UDim2.new(0.5, 5, 0, 0),
+        Size = UDim2.new(0.5, -7, 1, 0),
+        Position = UDim2.new(0.5, 7, 0, 0),
         BackgroundTransparency = 1,
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = page,
     })
     create("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 8),
+        Padding = UDim.new(0, 14),
         Parent = rightCol,
     })
 
@@ -418,6 +428,9 @@ function Library:CreateTab(name, icon)
         Page = page,
         LeftColumn = leftCol,
         RightColumn = rightCol,
+        IconLabel = iconLabel,
+        TextLabel = textLabel,
+        Indicator = activeIndicator,
     }
 
     button.MouseButton1Click:Connect(function()
@@ -428,7 +441,6 @@ function Library:CreateTab(name, icon)
 
     if index == 1 then
         self.ActiveTab = tabData
-        button.BackgroundColor3 = Theme.TabActive
     end
 
     return TabAPI.new(self, tabData)
@@ -437,13 +449,18 @@ end
 function Library:SelectTab(tabData)
     if self.ActiveTab then
         self.ActiveTab.Page.Visible = false
-        tween(self.ActiveTab.Button, TweenInfo.new(0.15), {BackgroundColor3 = Theme.TabInactive})
+        self.ActiveTab.Indicator.Visible = false
+        self.ActiveTab.IconLabel.TextColor3 = Theme.TextSecondary
+        self.ActiveTab.TextLabel.TextColor3 = Theme.TextSecondary
     end
 
     self.ActiveTab = tabData
     tabData.Page.Visible = true
-    tween(tabData.Button, TweenInfo.new(0.15), {BackgroundColor3 = Theme.TabActive})
+    tabData.Indicator.Visible = true
+    tabData.IconLabel.TextColor3 = Theme.TextPrimary
+    tabData.TextLabel.TextColor3 = Theme.TextPrimary
 end
+
 --=============================
 -- TAB API
 --=============================
@@ -457,55 +474,60 @@ function TabAPI.new(library, tabData)
     }, TabAPI)
 end
 
-local function pickColumn(self, side)
-    if side == "Right" then
-        return self.TabData.RightColumn
-    end
-    return self.TabData.LeftColumn
-end
-
 function TabAPI:AddSection(text, side)
-    local column = pickColumn(self, side)
+    local column = (side == "Right") and self.TabData.RightColumn or self.TabData.LeftColumn
 
+    -- Секция с 1:1 рамкой, врезающейся в заголовок
     local holder = create("Frame", {
         Name = "Section",
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
-        BackgroundColor3 = Theme.Panel,
-        BorderSizePixel = 0,
+        BackgroundColor3 = Theme.Background,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderInner,
         LayoutOrder = #column:GetChildren(),
         Parent = column,
     })
-    corner(5).Parent = holder
-    stroke(Theme.Border, 1).Parent = holder
 
-    create("TextLabel", {
-        Size = UDim2.new(1, -16, 0, 22),
-        Position = UDim2.new(0, 8, 0, 8),
-        BackgroundTransparency = 1,
-        Text = text,
+    -- Фирменная обводка секции в стиле Gamesense
+    create("UIStroke", {
+        Color = Color3.fromRGB(0, 0, 0),
+        Thickness = 1,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Parent = holder
+    })
+
+    -- Лейбл секции (врезается в рамку сверху)
+    local label = create("TextLabel", {
+        Size = UDim2.fromOffset(0, 14),
+        Position = UDim2.new(0, 12, 0, -8),
+        BackgroundColor3 = Theme.Background,
+        Text = "  " .. text .. "  ",
         Font = Theme.FontBold,
-        TextSize = 13,
-        TextColor3 = Theme.TextSecondary,
+        TextSize = 12,
+        TextColor3 = Theme.TextPrimary,
         TextXAlignment = Enum.TextXAlignment.Left,
+        AutomaticSize = Enum.AutomaticSize.X,
         Parent = holder,
     })
 
     local content = create("Frame", {
         Name = "Content",
-        Size = UDim2.new(1, -16, 0, 0),
-        Position = UDim2.new(0, 8, 0, 34),
+        Size = UDim2.new(1, -20, 0, 0),
+        Position = UDim2.new(0, 10, 0, 10),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundTransparency = 1,
         Parent = holder,
     })
+    
     create("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 6),
+        Padding = UDim.new(0, 8),
         Parent = content,
     })
+    
     create("UIPadding", {
-        PaddingBottom = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 12),
         Parent = content,
     })
 
@@ -513,7 +535,7 @@ function TabAPI:AddSection(text, side)
 end
 
 --=============================
--- SECTION API
+-- SECTION API (1:1 Controls)
 --=============================
 SectionAPI = {}
 SectionAPI.__index = SectionAPI
@@ -532,29 +554,30 @@ function SectionAPI:AddCheckbox(text, default, callback)
     local state = default or false
 
     local row = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 20),
+        Size = UDim2.new(1, 0, 0, 16),
         BackgroundTransparency = 1,
         LayoutOrder = nextOrder(self),
         Parent = self.Content,
     })
 
+    -- 1:1 Квадратный чекбокс с черным бордером
     local box = create("Frame", {
-        Size = UDim2.fromOffset(16, 16),
-        Position = UDim2.new(0, 0, 0.5, -8),
+        Size = UDim2.fromOffset(10, 10),
+        Position = UDim2.new(0, 0, 0.5, -5),
         BackgroundColor3 = state and Theme.ToggleOn or Theme.ToggleOff,
-        BorderSizePixel = 0,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
         Parent = row,
     })
-    corner(3).Parent = box
 
     create("TextLabel", {
-        Size = UDim2.new(1, -24, 1, 0),
-        Position = UDim2.new(0, 24, 0, 0),
+        Size = UDim2.new(1, -18, 1, 0),
+        Position = UDim2.new(0, 18, 0, 0),
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
         TextSize = 13,
-        TextColor3 = Theme.TextPrimary,
+        TextColor3 = state and Theme.TextPrimary or Theme.TextSecondary,
         TextXAlignment = Enum.TextXAlignment.Left,
         Parent = row,
     })
@@ -568,7 +591,8 @@ function SectionAPI:AddCheckbox(text, default, callback)
 
     clickArea.MouseButton1Click:Connect(function()
         state = not state
-        tween(box, TweenInfo.new(0.1), {BackgroundColor3 = state and Theme.ToggleOn or Theme.ToggleOff})
+        box.BackgroundColor3 = state and Theme.ToggleOn or Theme.ToggleOff
+        row.TextLabel.TextColor3 = state and Theme.TextPrimary or Theme.TextSecondary
         callback(state)
     end)
 
@@ -576,12 +600,12 @@ function SectionAPI:AddCheckbox(text, default, callback)
         Set = function(_, value)
             state = value
             box.BackgroundColor3 = state and Theme.ToggleOn or Theme.ToggleOff
+            row.TextLabel.TextColor3 = state and Theme.TextPrimary or Theme.TextSecondary
         end,
-        Get = function()
-            return state
-        end,
+        Get = function() return state end,
     }
 end
+
 function SectionAPI:AddSlider(text, min, max, default, callback)
     callback = callback or function() end
     min = min or 0
@@ -589,14 +613,14 @@ function SectionAPI:AddSlider(text, min, max, default, callback)
     default = math.clamp(default or min, min, max)
 
     local row = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 26),
         BackgroundTransparency = 1,
         LayoutOrder = nextOrder(self),
         Parent = self.Content,
     })
 
-    create("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 16),
+    local label = create("TextLabel", {
+        Size = UDim2.new(1, 0, 0, 14),
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
@@ -606,8 +630,26 @@ function SectionAPI:AddSlider(text, min, max, default, callback)
         Parent = row,
     })
 
+    -- Трек слайдера (тонкий, плоский)
+    local track = create("Frame", {
+        Size = UDim2.new(1, 0, 0, 6),
+        Position = UDim2.new(0, 0, 0, 16),
+        BackgroundColor3 = Theme.ToggleOff,
+        BorderSizePixel = 1,
+        BorderColor3 = Color3.fromRGB(0, 0, 0),
+        Parent = row,
+    })
+
+    local fill = create("Frame", {
+        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
+        BackgroundColor3 = Theme.Accent,
+        BorderSizePixel = 0,
+        Parent = track,
+    })
+
+    -- Текст значения на самом слайдере (справа в углу)
     local valueLabel = create("TextLabel", {
-        Size = UDim2.new(0, 40, 0, 16),
+        Size = UDim2.fromOffset(40, 14),
         Position = UDim2.new(1, -40, 0, 0),
         BackgroundTransparency = 1,
         Text = tostring(default),
@@ -617,23 +659,6 @@ function SectionAPI:AddSlider(text, min, max, default, callback)
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = row,
     })
-
-    local track = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 4),
-        Position = UDim2.new(0, 0, 0, 24),
-        BackgroundColor3 = Theme.ToggleOff,
-        BorderSizePixel = 0,
-        Parent = row,
-    })
-    corner(2).Parent = track
-
-    local fill = create("Frame", {
-        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
-        BackgroundColor3 = Theme.SliderFill,
-        BorderSizePixel = 0,
-        Parent = track,
-    })
-    corner(2).Parent = fill
 
     local dragging = false
     local function setFromX(xpos)
@@ -679,14 +704,14 @@ function SectionAPI:AddDropdown(text, options, default, callback)
     local selected = default or options[1]
 
     local row = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 36),
+        Size = UDim2.new(1, 0, 0, 34),
         BackgroundTransparency = 1,
         LayoutOrder = nextOrder(self),
         Parent = self.Content,
     })
 
     create("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 16),
+        Size = UDim2.new(1, 0, 0, 14),
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
@@ -696,51 +721,72 @@ function SectionAPI:AddDropdown(text, options, default, callback)
         Parent = row,
     })
 
+    -- Кнопка дропдауна (1:1 плоская плашка)
     local box = create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 22),
+        Size = UDim2.new(1, 0, 0, 18),
         Position = UDim2.new(0, 0, 0, 16),
         BackgroundColor3 = Theme.PanelAlt,
-        Text = tostring(selected) .. "  ▾",
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
+        Text = "  " .. tostring(selected),
         Font = Theme.Font,
         TextSize = 12,
         TextColor3 = Theme.TextPrimary,
+        TextXAlignment = Enum.TextXAlignment.Left,
         AutoButtonColor = false,
         Parent = row,
     })
-    corner(3).Parent = box
-    stroke(Theme.Border, 1).Parent = box
+    
+    local arrow = create("TextLabel", {
+        Size = UDim2.new(0, 18, 1, 0),
+        Position = UDim2.new(1, -18, 0, 0),
+        BackgroundTransparency = 1,
+        Text = "▼",
+        Font = Theme.Font,
+        TextSize = 8,
+        TextColor3 = Theme.TextSecondary,
+        Parent = box
+    })
 
     local listOpen = false
     local list = create("Frame", {
-        Size = UDim2.new(1, 0, 0, #options * 22),
-        Position = UDim2.new(0, 0, 1, 2),
-        BackgroundColor3 = Theme.PanelAlt,
-        BorderSizePixel = 0,
+        Size = UDim2.new(1, 0, 0, #options * 18),
+        Position = UDim2.new(0, 0, 1, 1),
+        BackgroundColor3 = Theme.Panel,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
         Visible = false,
-        ZIndex = 5,
+        ZIndex = 10,
         Parent = box,
     })
-    corner(3).Parent = list
-    stroke(Theme.Border, 1).Parent = list
     create("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Parent = list})
 
     for _, opt in ipairs(options) do
         local optBtn = create("TextButton", {
-            Size = UDim2.new(1, 0, 0, 22),
-            BackgroundColor3 = Theme.PanelAlt,
-            Text = tostring(opt),
+            Size = UDim2.new(1, 0, 0, 18),
+            BackgroundColor3 = Theme.Panel,
+            BorderSizePixel = 0,
+            Text = "  " .. tostring(opt),
             Font = Theme.Font,
             TextSize = 12,
-            TextColor3 = Theme.TextSecondary,
+            TextColor3 = (opt == selected) and Theme.Accent or Theme.TextSecondary,
+            TextXAlignment = Enum.TextXAlignment.Left,
             AutoButtonColor = true,
-            ZIndex = 5,
+            ZIndex = 10,
             Parent = list,
         })
+        
         optBtn.MouseButton1Click:Connect(function()
             selected = opt
-            box.Text = tostring(opt) .. "  ▾"
+            box.Text = "  " .. tostring(opt)
             list.Visible = false
             listOpen = false
+            
+            for _, btn in ipairs(list:GetChildren()) do
+                if btn:IsA("TextButton") then
+                    btn.TextColor3 = (btn.Text == "  " .. tostring(opt)) and Theme.Accent or Theme.TextSecondary
+                end
+            end
             callback(opt)
         end)
     end
@@ -753,11 +799,9 @@ function SectionAPI:AddDropdown(text, options, default, callback)
     return {
         Set = function(_, value)
             selected = value
-            box.Text = tostring(value) .. "  ▾"
+            box.Text = "  " .. tostring(value)
         end,
-        Get = function()
-            return selected
-        end,
+        Get = function() return selected end,
     }
 end
 
@@ -765,24 +809,24 @@ function SectionAPI:AddButton(text, callback)
     callback = callback or function() end
 
     local btn = create("TextButton", {
-        Size = UDim2.new(1, 0, 0, 26),
+        Size = UDim2.new(1, 0, 0, 20),
         BackgroundColor3 = Theme.PanelAlt,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
         Text = text,
         Font = Theme.Font,
-        TextSize = 13,
+        TextSize = 12,
         TextColor3 = Theme.TextPrimary,
         AutoButtonColor = false,
         LayoutOrder = nextOrder(self),
         Parent = self.Content,
     })
-    corner(4).Parent = btn
-    stroke(Theme.Border, 1).Parent = btn
 
     btn.MouseEnter:Connect(function()
-        tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.TabActive})
+        btn.BackgroundColor3 = Color3.fromRGB(28, 28, 28)
     end)
     btn.MouseLeave:Connect(function()
-        tween(btn, TweenInfo.new(0.1), {BackgroundColor3 = Theme.PanelAlt})
+        btn.BackgroundColor3 = Theme.PanelAlt
     end)
     btn.MouseButton1Click:Connect(callback)
 
@@ -791,7 +835,7 @@ end
 
 function SectionAPI:AddLabel(text)
     local label = create("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 18),
+        Size = UDim2.new(1, 0, 0, 14),
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
@@ -805,7 +849,7 @@ function SectionAPI:AddLabel(text)
 end
 
 --=============================
--- NOTIFICATIONS
+-- 1:1 NOTIFICATIONS
 --=============================
 local NotificationHolder
 
@@ -814,8 +858,8 @@ local function ensureNotificationHolder(screenGui)
 
     NotificationHolder = create("Frame", {
         Name = "Notifications",
-        Size = UDim2.fromOffset(280, 500),
-        Position = UDim2.new(1, -290, 1, -510),
+        Size = UDim2.fromOffset(240, 500),
+        Position = UDim2.new(1, -250, 1, -510),
         BackgroundTransparency = 1,
         Parent = screenGui,
     })
@@ -833,10 +877,10 @@ function Library:Notify(title, text, duration, notifType)
     notifType = notifType or "info"
 
     local accentColors = {
-        info = Color3.fromRGB(0, 170, 255),
-        success = Color3.fromRGB(60, 220, 130),
-        warning = Color3.fromRGB(255, 200, 0),
-        error = Color3.fromRGB(255, 70, 70),
+        info = Color3.fromRGB(55, 175, 225),
+        success = Color3.fromRGB(153, 204, 0),
+        warning = Color3.fromRGB(220, 180, 50),
+        error = Color3.fromRGB(220, 60, 60),
     }
     local accent = accentColors[notifType] or accentColors.info
 
@@ -845,39 +889,46 @@ function Library:Notify(title, text, duration, notifType)
     local notif = create("Frame", {
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
-        BackgroundColor3 = Theme.Panel,
-        BorderSizePixel = 0,
+        BackgroundColor3 = Theme.Background,
+        BorderSizePixel = 1,
+        BorderColor3 = Theme.BorderOuter,
         ClipsDescendants = true,
         Parent = holder,
     })
-    corner(5).Parent = notif
-    stroke(Theme.Border, 1).Parent = notif
+    
+    create("UIStroke", {
+        Color = Color3.fromRGB(0, 0, 0),
+        Thickness = 1,
+        ApplyStrokeMode = Enum.ApplyStrokeMode.Border,
+        Parent = notif
+    })
 
+    -- Полоска акцента слева
     create("Frame", {
-        Size = UDim2.new(0, 3, 1, 0),
+        Size = UDim2.new(0, 2, 1, 0),
         BackgroundColor3 = accent,
         BorderSizePixel = 0,
         Parent = notif,
     })
 
     local textHolder = create("Frame", {
-        Size = UDim2.new(1, -13, 0, 0),
-        Position = UDim2.new(0, 10, 0, 0),
+        Size = UDim2.new(1, -10, 0, 0),
+        Position = UDim2.new(0, 8, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundTransparency = 1,
         Parent = notif,
     })
-    create("UIPadding", {PaddingTop = UDim.new(0, 8), PaddingBottom = UDim.new(0, 8), Parent = textHolder})
+    create("UIPadding", {PaddingTop = UDim.new(0, 6), PaddingBottom = UDim.new(0, 6), Parent = textHolder})
     create("UIListLayout", {SortOrder = Enum.SortOrder.LayoutOrder, Padding = UDim.new(0, 2), Parent = textHolder})
 
-    create("TextLabel", {Size = UDim2.new(1, 0, 0, 16), BackgroundTransparency = 1, Text = title, Font = Theme.FontBold, TextSize = 13, TextColor3 = Theme.TextPrimary, TextXAlignment = Enum.TextXAlignment.Left, Parent = textHolder})
-    create("TextLabel", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Text = text, Font = Theme.Font, TextSize = 12, TextColor3 = Theme.TextSecondary, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = textHolder})
+    create("TextLabel", {Size = UDim2.new(1, 0, 0, 14), BackgroundTransparency = 1, Text = title, Font = Theme.FontBold, TextSize = 12, TextColor3 = Theme.TextPrimary, TextXAlignment = Enum.TextXAlignment.Left, Parent = textHolder})
+    create("TextLabel", {Size = UDim2.new(1, 0, 0, 0), AutomaticSize = Enum.AutomaticSize.Y, BackgroundTransparency = 1, Text = text, Font = Theme.Font, TextSize = 11, TextColor3 = Theme.TextSecondary, TextWrapped = true, TextXAlignment = Enum.TextXAlignment.Left, Parent = textHolder})
 
     notif.Position = UDim2.new(1.2, 0, 0, 0)
-    tween(notif, TweenInfo.new(0.28, Enum.EasingStyle.Quint, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)})
+    tween(notif, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {Position = UDim2.new(0, 0, 0, 0)})
 
     task.delay(duration, function()
-        tween(notif, TweenInfo.new(0.25, Enum.EasingStyle.Quint, Enum.EasingDirection.In), {Position = UDim2.new(1.2, 0, 0, 0)}).Completed:Wait()
+        tween(notif, TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {Position = UDim2.new(1.2, 0, 0, 0)}).Completed:Wait()
         notif:Destroy()
     end)
 end
