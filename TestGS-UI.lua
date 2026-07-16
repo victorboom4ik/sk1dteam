@@ -30,8 +30,8 @@ local Theme = {
         Color3.fromRGB(215, 215, 80),  -- Желто-зеленый
     },
     
-    Font            = Enum.Font.UbuntuMono,            -- Идеальный моноширинный шрифт для пиксельного стиля
-    FontBold        = Enum.Font.UbuntuMono,
+    Font            = Enum.Font.Code,            -- Идеальный моноширинный шрифт для пиксельного стиля
+    FontBold        = Enum.Font.Code,
     TextSize        = 12,                              -- Мелкий оригинальный размер текста
 }
 
