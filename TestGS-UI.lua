@@ -1,5 +1,6 @@
 --[[
     GamesenseUI - Pixel-Perfect 1:1 Gamesense Style UI Library for Roblox
+    Fixed: Clipping, text-cutout borders, precise pixel sizing & alignment.
 --]]
 
 local TweenService = game:GetService("TweenService")
@@ -30,9 +31,9 @@ local Theme = {
         Color3.fromRGB(215, 215, 80),  -- Желто-зеленый
     },
     
-    Font            = Enum.Font.Code,            -- Идеальный моноширинный шрифт для пиксельного стиля
+    Font            = Enum.Font.Code,                  -- Гарантированно рабочий моноширинный шрифт
     FontBold        = Enum.Font.Code,
-    TextSize        = 12,                              -- Мелкий оригинальный размер текста
+    TextSize        = 11,                              -- Строгий мелкий размер
 }
 
 --=============================
@@ -49,7 +50,6 @@ local function create(class, props, children)
     return inst
 end
 
--- Создает 1px пиксельную контрастную обводку (черная + серая)
 local function applyPixelBorder(parent, outerColor, innerColor)
     create("UIStroke", {
         Color = innerColor or Theme.BorderBlack,
@@ -94,9 +94,9 @@ function Library.new(title)
     end
 
     local winW, winH = 640, 500
-    if IsMobile then winW, winH = 480, 340 end
+    if IsMobile then winW, winH = 500, 360 end
 
-    -- Главное окно (Строгий плоский прямоугольник)
+    -- Главное окно
     self.Main = create("Frame", {
         Name = "Main",
         Size = UDim2.fromOffset(winW, winH),
@@ -108,7 +108,7 @@ function Library.new(title)
     })
     applyPixelBorder(self.Main, Theme.BorderBlack)
 
-    -- Фирменный верхний трехцветный градиент (толщина ровно 2 пикселя)
+    -- Градиентная полоса сверху (ровно 2px)
     self.TopStrip = create("Frame", {
         Name = "TopStrip",
         Size = UDim2.new(1, 0, 0, 2),
@@ -128,7 +128,7 @@ function Library.new(title)
         Parent = self.TopStrip,
     })
 
-    -- Внутреннее тело с отступом (создает эффект двойной рамки)
+    -- Внутреннее тело
     self.Body = create("Frame", {
         Size = UDim2.new(1, -12, 1, -20),
         Position = UDim2.new(0, 6, 0, 14),
@@ -139,7 +139,7 @@ function Library.new(title)
     })
     applyPixelBorder(self.Body)
 
-    -- Левая панель вкладок (чисто иконки, строго вертикально)
+    -- Левая колонка вкладок
     self.TabBar = create("Frame", {
         Size = UDim2.new(0, 50, 1, 0),
         Position = UDim2.new(0, 0, 0, 0),
@@ -153,11 +153,11 @@ function Library.new(title)
     self.TabBarLayout = create("UIListLayout", {
         FillDirection = Enum.FillDirection.Vertical,
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 4),
+        Padding = UDim.new(0, 0),
         Parent = self.TabBar
     })
 
-    -- Контейнер для страниц (справа от таббара)
+    -- Контейнер страниц
     self.PageContainer = create("Frame", {
         Size = UDim2.new(1, -50, 1, 0),
         Position = UDim2.new(0, 50, 0, 0),
@@ -167,7 +167,7 @@ function Library.new(title)
 
     self:_setupDrag(self.Main)
 
-    -- Скрытие по Insert
+    -- Сворачивание на Insert
     UserInputService.InputBegan:Connect(function(input, gpe)
         if gpe or input.KeyCode ~= Enum.KeyCode.Insert then return end
         self:Toggle()
@@ -236,26 +236,24 @@ function Library:Toggle()
 end
 
 --=============================
--- TABS (Vertical Icon Only)
+-- TABS
 --=============================
 function Library:CreateTab(name, icon)
     local index = #self.Tabs + 1
     icon = icon or "🎯"
 
-    -- Кнопка вкладки
     local button = create("TextButton", {
         Name = name .. "Tab",
-        Size = UDim2.new(1, 0, 0, 48),
+        Size = UDim2.new(1, 0, 0, 50),
         BackgroundTransparency = 1,
         Text = "",
         LayoutOrder = index,
         Parent = self.TabBar,
     })
 
-    -- Микро-полоска активности слева
     local indicator = create("Frame", {
-        Size = UDim2.new(0, 2, 0, 24),
-        Position = UDim2.new(0, 0, 0.5, -12),
+        Size = UDim2.new(0, 2, 0, 26),
+        Position = UDim2.new(0, 0, 0.5, -13),
         BackgroundColor3 = Theme.AccentGreen,
         BorderSizePixel = 0,
         Visible = index == 1,
@@ -267,18 +265,17 @@ function Library:CreateTab(name, icon)
         BackgroundTransparency = 1,
         Text = icon,
         Font = Theme.Font,
-        TextSize = 20,
+        TextSize = 18,
         TextColor3 = index == 1 and Theme.TextPrimary or Theme.TextSecondary,
         Parent = button,
     })
 
-    -- Контент страницы (Scrolling)
     local page = create("ScrollingFrame", {
         Name = name .. "Page",
         Size = UDim2.new(1, 0, 1, 0),
         BackgroundTransparency = 1,
         BorderSizePixel = 0,
-        ScrollBarThickness = 1,
+        ScrollBarThickness = 2,
         ScrollBarImageColor3 = Theme.BorderOuter,
         CanvasSize = UDim2.new(0, 0, 0, 0),
         AutomaticCanvasSize = Enum.AutomaticSize.Y,
@@ -287,38 +284,37 @@ function Library:CreateTab(name, icon)
     })
 
     create("UIPadding", {
-        PaddingTop = UDim.new(0, 16),
-        PaddingLeft = UDim.new(0, 14),
-        PaddingRight = UDim.new(0, 14),
-        PaddingBottom = UDim.new(0, 16),
+        PaddingTop = UDim.new(0, 12),
+        PaddingLeft = UDim.new(0, 10),
+        PaddingRight = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 12),
         Parent = page,
     })
 
-    -- Две равноправные колонки для идеальной сетки секций
     local leftCol = create("Frame", {
         Name = "LeftColumn",
-        Size = UDim2.new(0.5, -8, 1, 0),
+        Size = UDim2.new(0.5, -6, 1, 0),
         BackgroundTransparency = 1,
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = page,
     })
     create("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 16),
+        Padding = UDim.new(0, 12),
         Parent = leftCol,
     })
 
     local rightCol = create("Frame", {
         Name = "RightColumn",
-        Size = UDim2.new(0.5, -8, 1, 0),
-        Position = UDim2.new(0.5, 8, 0, 0),
+        Size = UDim2.new(0.5, -6, 1, 0),
+        Position = UDim2.new(0.5, 6, 0, 0),
         BackgroundTransparency = 1,
         AutomaticSize = Enum.AutomaticSize.Y,
         Parent = page,
     })
     create("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 16),
+        Padding = UDim.new(0, 12),
         Parent = rightCol,
     })
 
@@ -337,10 +333,7 @@ function Library:CreateTab(name, icon)
     end)
 
     table.insert(self.Tabs, tabData)
-
-    if index == 1 then
-        self.ActiveTab = tabData
-    end
+    if index == 1 then self.ActiveTab = tabData end
 
     return TabAPI.new(self, tabData)
 end
@@ -351,7 +344,6 @@ function Library:SelectTab(tabData)
         self.ActiveTab.Indicator.Visible = false
         self.ActiveTab.IconLabel.TextColor3 = Theme.TextSecondary
     end
-
     self.ActiveTab = tabData
     tabData.Page.Visible = true
     tabData.Indicator.Visible = true
@@ -365,42 +357,61 @@ TabAPI = {}
 TabAPI.__index = TabAPI
 
 function TabAPI.new(library, tabData)
-    return setmetatable({
-        Library = library,
-        TabData = tabData,
-    }, TabAPI)
+    return setmetatable({Library = library, TabData = tabData}, TabAPI)
 end
 
 function TabAPI:AddSection(text, side)
     local column = (side == "Right") and self.TabData.RightColumn or self.TabData.LeftColumn
 
-    -- Секция с врезанной рамкой
+    -- Секция (без рамок сверху, рамку мы соберем кастомно для создания разрыва под текст)
     local holder = create("Frame", {
-        Name = "Section",
+        Name = "Section_" .. text,
         Size = UDim2.new(1, 0, 0, 0),
         AutomaticSize = Enum.AutomaticSize.Y,
         BackgroundColor3 = Theme.Background,
-        BorderSizePixel = 1,
-        BorderColor3 = Theme.BorderInner,
+        BorderSizePixel = 0,
         LayoutOrder = #column:GetChildren(),
         Parent = column,
     })
-    applyPixelBorder(holder)
 
-    -- Контейнер для текста заголовка, перекрывающий рамку секции сверху
-    local label = create("TextLabel", {
-        Size = UDim2.fromOffset(0, 12),
-        Position = UDim2.new(0, 10, 0, -6),
-        BackgroundColor3 = Theme.Background, -- Перекрывает рамку фоном
-        Text = " " .. text .. " ",
+    -- Фирменный "разрыв" рамки под текст (3 линии)
+    local leftLine = create("Frame", {
+        Size = UDim2.new(0, 10, 0, 1),
+        Position = UDim2.new(0, 0, 0, 0),
+        BackgroundColor3 = Theme.BorderInner,
+        BorderSizePixel = 0,
+        Parent = holder
+    })
+
+    local titleLabel = create("TextLabel", {
+        Size = UDim2.new(0, 0, 0, 12),
+        Position = UDim2.new(0, 12, 0, -6),
+        BackgroundTransparency = 1,
+        Text = text,
         Font = Theme.FontBold,
         TextSize = Theme.TextSize,
         TextColor3 = Theme.TextPrimary,
         TextXAlignment = Enum.TextXAlignment.Left,
         AutomaticSize = Enum.AutomaticSize.X,
-        ZIndex = 3,
-        Parent = holder,
+        Parent = holder
     })
+
+    -- Ждем отрисовки для точного позиционирования правой линии рамки
+    task.spawn(function()
+        local textWidth = titleLabel.AbsoluteSize.X
+        create("Frame", {
+            Size = UDim2.new(1, -(14 + textWidth), 0, 1),
+            Position = UDim2.new(0, 14 + textWidth, 0, 0),
+            BackgroundColor3 = Theme.BorderInner,
+            BorderSizePixel = 0,
+            Parent = holder
+        })
+    end)
+
+    -- Боковые и нижняя линии рамки
+    create("Frame", { Name = "LeftB", Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(0, 0, 0, 0), BackgroundColor3 = Theme.BorderInner, BorderSizePixel = 0, Parent = holder })
+    create("Frame", { Name = "RightB", Size = UDim2.new(0, 1, 1, 0), Position = UDim2.new(1, -1, 0, 0), BackgroundColor3 = Theme.BorderInner, BorderSizePixel = 0, Parent = holder })
+    create("Frame", { Name = "BottomB", Size = UDim2.new(1, 0, 0, 1), Position = UDim2.new(0, 0, 1, -1), BackgroundColor3 = Theme.BorderInner, BorderSizePixel = 0, Parent = holder })
 
     local content = create("Frame", {
         Name = "Content",
@@ -412,11 +423,11 @@ function TabAPI:AddSection(text, side)
     })
     create("UIListLayout", {
         SortOrder = Enum.SortOrder.LayoutOrder,
-        Padding = UDim.new(0, 8),
+        Padding = UDim.new(0, 6),
         Parent = content,
     })
     create("UIPadding", {
-        PaddingBottom = UDim.new(0, 10),
+        PaddingBottom = UDim.new(0, 8),
         Parent = content,
     })
 
@@ -438,7 +449,7 @@ local function nextOrder(self)
     return self._order
 end
 
--- 1:1 Маленький квадратный чекбокс
+-- Идеальный чекбокс (ровно 8x8 пикселей)[span_2](start_span)[span_2](end_span)
 function SectionAPI:AddCheckbox(text, default, callback)
     callback = callback or function() end
     local state = default or false
@@ -450,19 +461,19 @@ function SectionAPI:AddCheckbox(text, default, callback)
         Parent = self.Content,
     })
 
-    -- Квадратный бокс
     local box = create("Frame", {
         Size = UDim2.fromOffset(8, 8),
         Position = UDim2.new(0, 0, 0.5, -4),
-        BackgroundColor3 = state and Theme.AccentGreen or Theme.ToggleOff,
+        BackgroundColor3 = state and Theme.AccentGreen or Theme.Background,
         BorderSizePixel = 1,
-        BorderColor3 = Theme.BorderBlack,
+        BorderColor3 = Theme.BorderInner,
         Parent = row,
     })
+    applyPixelBorder(box)
 
     local label = create("TextLabel", {
-        Size = UDim2.new(1, -16, 1, 0),
-        Position = UDim2.new(0, 16, 0, 0),
+        Size = UDim2.new(1, -14, 1, 0),
+        Position = UDim2.new(0, 14, 0, 0),
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
@@ -481,7 +492,7 @@ function SectionAPI:AddCheckbox(text, default, callback)
 
     clickArea.MouseButton1Click:Connect(function()
         state = not state
-        box.BackgroundColor3 = state and Theme.AccentGreen or Theme.ToggleOff
+        box.BackgroundColor3 = state and Theme.AccentGreen or Theme.Background
         label.TextColor3 = state and Theme.TextPrimary or Theme.TextSecondary
         callback(state)
     end)
@@ -489,14 +500,14 @@ function SectionAPI:AddCheckbox(text, default, callback)
     return {
         Set = function(_, value)
             state = value
-            box.BackgroundColor3 = state and Theme.AccentGreen or Theme.ToggleOff
+            box.BackgroundColor3 = state and Theme.AccentGreen or Theme.Background
             label.TextColor3 = state and Theme.TextPrimary or Theme.TextSecondary
         end,
         Get = function() return state end,
     }
 end
 
--- 1:1 Ультратонкий слайдер со значением прямо на полосе
+-- Идеальный тонкий слайдер (высота 5px, значение справа в углу)[span_3](start_span)[span_3](end_span)
 function SectionAPI:AddSlider(text, min, max, default, callback)
     callback = callback or function() end
     min = min or 0
@@ -510,8 +521,8 @@ function SectionAPI:AddSlider(text, min, max, default, callback)
         Parent = self.Content,
     })
 
-    create("TextLabel", {
-        Size = UDim2.new(1, 0, 0, 12),
+    local nameLabel = create("TextLabel", {
+        Size = UDim2.new(1, -40, 0, 12),
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
@@ -521,34 +532,33 @@ function SectionAPI:AddSlider(text, min, max, default, callback)
         Parent = row,
     })
 
-    -- Трек (полоска) слайдера
-    local track = create("Frame", {
-        Size = UDim2.new(1, 0, 0, 6),
-        Position = UDim2.new(0, 0, 0, 14),
-        BackgroundColor3 = Theme.ToggleOff,
-        BorderSizePixel = 1,
-        BorderColor3 = Theme.BorderBlack,
-        Parent = row,
-    })
-
-    local fill = create("Frame", {
-        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
-        BackgroundColor3 = Theme.AccentGreen,
-        BorderSizePixel = 0,
-        Parent = track,
-    })
-
-    -- Отображение процентов/значений прямо внутри слайдера
     local valueLabel = create("TextLabel", {
         Size = UDim2.new(0, 40, 0, 12),
         Position = UDim2.new(1, -40, 0, 0),
         BackgroundTransparency = 1,
         Text = tostring(default),
         Font = Theme.Font,
-        TextSize = 11,
+        TextSize = Theme.TextSize,
         TextColor3 = Theme.TextPrimary,
         TextXAlignment = Enum.TextXAlignment.Right,
         Parent = row,
+    })
+
+    -- Идеально плоский трек слайдера (строго внутрь рамки)
+    local track = create("Frame", {
+        Size = UDim2.new(1, 0, 0, 5),
+        Position = UDim2.new(0, 0, 0, 14),
+        BackgroundColor3 = Color3.fromRGB(20, 20, 20),
+        BorderSizePixel = 0,
+        Parent = row,
+    })
+    applyPixelBorder(track)
+
+    local fill = create("Frame", {
+        Size = UDim2.new((default - min) / (max - min), 0, 1, 0),
+        BackgroundColor3 = Theme.AccentGreen,
+        BorderSizePixel = 0,
+        Parent = track,
     })
 
     local dragging = false
@@ -589,7 +599,7 @@ function SectionAPI:AddSlider(text, min, max, default, callback)
     }
 end
 
--- 1:1 Плоский строгий дропдаун
+-- Идеальный плоский Дропдаун
 function SectionAPI:AddDropdown(text, options, default, callback)
     callback = callback or function() end
     options = options or {}
@@ -621,7 +631,7 @@ function SectionAPI:AddDropdown(text, options, default, callback)
         BorderColor3 = Theme.BorderBlack,
         Text = "  " .. tostring(selected),
         Font = Theme.Font,
-        TextSize = 11,
+        TextSize = Theme.TextSize,
         TextColor3 = Theme.TextPrimary,
         TextXAlignment = Enum.TextXAlignment.Left,
         AutoButtonColor = false,
@@ -659,7 +669,7 @@ function SectionAPI:AddDropdown(text, options, default, callback)
             BorderSizePixel = 0,
             Text = "  " .. tostring(opt),
             Font = Theme.Font,
-            TextSize = 11,
+            TextSize = Theme.TextSize,
             TextColor3 = (opt == selected) and Theme.AccentGreen or Theme.TextSecondary,
             TextXAlignment = Enum.TextXAlignment.Left,
             ZIndex = 10,
@@ -695,7 +705,7 @@ function SectionAPI:AddDropdown(text, options, default, callback)
     }
 end
 
--- 1:1 Плоская серая кнопка
+-- Плоская кнопка
 function SectionAPI:AddButton(text, callback)
     callback = callback or function() end
 
@@ -706,7 +716,7 @@ function SectionAPI:AddButton(text, callback)
         BorderColor3 = Theme.BorderBlack,
         Text = text,
         Font = Theme.Font,
-        TextSize = 11,
+        TextSize = Theme.TextSize,
         TextColor3 = Theme.TextPrimary,
         AutoButtonColor = false,
         LayoutOrder = nextOrder(self),
@@ -726,7 +736,7 @@ function SectionAPI:AddLabel(text)
         BackgroundTransparency = 1,
         Text = text,
         Font = Theme.Font,
-        TextSize = 11,
+        TextSize = Theme.TextSize,
         TextColor3 = Theme.TextSecondary,
         TextXAlignment = Enum.TextXAlignment.Left,
         LayoutOrder = nextOrder(self),
@@ -735,7 +745,7 @@ function SectionAPI:AddLabel(text)
 end
 
 --=============================
--- 1:1 NOTIFICATIONS
+-- NOTIFICATIONS
 --=============================
 local NotificationHolder
 
@@ -781,7 +791,6 @@ function Library:Notify(title, text, duration, notifType)
     })
     applyPixelBorder(notif)
 
-    -- Полоска акцента слева
     create("Frame", {
         Size = UDim2.new(0, 2, 1, 0),
         BackgroundColor3 = accent,
